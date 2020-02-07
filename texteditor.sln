@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29709.97
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "texteditor", "texteditor\texteditor.vcxproj", "{7B241D2E-1CB8-47D7-B0DF-0899A32E6141}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "texteditor", "texteditor.vcxproj", "{7B241D2E-1CB8-47D7-B0DF-0899A32E6141}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +26,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {E67A2931-E519-477E-B182-5E5A217994C8}
+		SolutionGuid = {ADF65232-DF19-46D8-ADCB-508C174BBD58}
 	EndGlobalSection
 EndGlobal
