@@ -1,0 +1,24 @@
+the texteditor must have:
+----------------------------
+- all the things that windows' default texteditor has
+- ability to change background / font color
+- decoders for the common file encodings on Microsoft Windows (UTF-8, Windows-1252 / "ANSI", ISO/IEC 8859-1, ASCII)
+
+
+the texteditor should have:
+----------------------------
+- GPU acceleration
+- support for any monospaced horizontal font
+- support for Windows 7 and up
+- as many files open as memory allows
+- render as many files onscreen as hardware allows
+- stop rendering when no input to decrease GPU load
+
+
+the texteditor could have:
+----------------------------
+- support for Windows XP & Vista
+- support for Linux (big undertaking obviously, as this texteditor is mainly aimed at Microsoft Windows operability)
+- as sparse memory management as possible without losing performance
+- as much GPU utilization as possible without losing performance
+- support for more character encodings? (have to find out more about that stuff, as I don't which of these are the most common)
