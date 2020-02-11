@@ -21,4 +21,4 @@ the texteditor could have:
 - support for Linux (big undertaking obviously, as this texteditor is mainly aimed at Microsoft Windows operability)
 - as sparse memory management as possible without losing performance
 - as much GPU utilization as possible without losing performance
-- support for more character encodings? (have to find out more about that stuff, as I don't which of these are the most common)
+- support for more character encodings? (have to find out more about that stuff, as I don't know which of these are the most common)
