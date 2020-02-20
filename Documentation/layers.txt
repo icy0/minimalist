@@ -1,0 +1,37 @@
+The project is supposed to be structured into 4 layers, consisting of 6 subsystems.
+
+The first layer is the user interface, which is supposed to be highly configurable and extendable.
+
+The second layer consists of the layout engine and the input mapper. 
+For now, the layout engine is supposed to perform rudimentary text layouting and text scaling.
+The input mapper holds an input map (represented through a config file), 
+that maps the inputs received from the IO engine (explanation below) to operations.
+
+The third layer introduces the renderer and the IO engine. The renderer is responsible for 
+translating information from the layout engine to actual drawcalls. The IO engine is responsible for
+gathering all relevant inputs and also managing open / closed files in the memory.
+
+The fourth layer is the platform-specific layer. It is supposed to provide all the things from the OS
+that the third layer needs, like memory allocations, file access, clock access, or anything else.
+For now, it is only planned to develop a Microsoft Windows layer. But the project architecture is designed
+to be easily extensible to other OS's.
+
+---------------------------------------------
+|											|
+|					GUI						|
+|											|
+---------------------------------------------
+|					|						|
+|	Layout Engine	|	Input-Mapper		|
+|					|						|
+---------------------------------------------
+|					|						|
+|	Renderer		|	IO Engine			|
+|					|						|
+---------------------------------------------
+|											|
+|		platform-specific layer				|
+|											|
+---------------------------------------------
+
+This is the first draft of the architecture and is by no means carved in stone.
