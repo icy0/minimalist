@@ -1,9 +1,9 @@
 #include <iostream>
 #include <ft2build.h>
+#include <windows.h>
 #include FT_FREETYPE_H
 
-
-int main()
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int nCmdShow)
 {
 	FT_Library library;
 	FT_Face face;
@@ -31,7 +31,7 @@ int main()
 		std::cout << "This font contains outline glyphs. Note that a face can contain bitmap strikes also.\n";
 	if((face->face_flags & FT_FACE_FLAG_FIXED_SIZES) == FT_FACE_FLAG_FIXED_SIZES)
 		std::cout << "This font contains bitmap strikes.\n";
-	if((face->face_flags & FT_FACE_FLAG_FIXED_WIDTH) == FT_FACE_FLAG_FIXED_WIDTH)
+	if ((face->face_flags & FT_FACE_FLAG_FIXED_WIDTH) == FT_FACE_FLAG_FIXED_WIDTH)
 		std::cout << "This font contains fixed width characters.\n";
 	if((face->face_flags & FT_FACE_FLAG_SFNT) == FT_FACE_FLAG_SFNT)
 		std::cout << "This font uses the SFNT storage scheme.\n";
@@ -45,5 +45,5 @@ int main()
 	std::cout << '\n' << "The face contains " << face->num_glyphs << " glyphs.\n";
 	std::cout << '\n' << "The face uses " << face->units_per_EM << " font units per EM.\n";
 
-
+	std::cin.get();
 }
