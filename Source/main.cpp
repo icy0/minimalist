@@ -3,7 +3,8 @@
 #include <windows.h>
 #include FT_FREETYPE_H
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int nCmdShow)
+// int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int nCmdShow)
+int main()
 {
 	FT_Library library;
 	FT_Face face;
