@@ -1,6 +1,6 @@
 the texteditor must have:
 ----------------------------
-- all the things that windows' default texteditor has
+- all the things that Windows' default texteditor has
 - ability to change background / font color
 - decoders for the common file encodings on Microsoft Windows (UTF-8, Windows-1252 / "ANSI", ISO/IEC 8859-1, ASCII)
 
@@ -17,7 +17,7 @@ the texteditor should have:
 
 the texteditor could have:
 ----------------------------
-- support for Windows XP & Vista
+- support for Windows XP and upwards
 - support for Linux (big undertaking obviously, as this texteditor is mainly aimed at Microsoft Windows operability)
 - as sparse memory management as possible without losing performance
 - as much GPU utilization as possible without losing performance
