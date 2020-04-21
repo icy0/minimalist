@@ -2,6 +2,12 @@
 #define UNICODE
 #endif 
 
+#define POINT_SIZE 10
+#define CHARACTER_LOAD 94
+#define UNICODE_GLYPH_LOAD_START_INDEX 33
+#define UNICODE_GLYPH_LOAD_END_INDEX 127
+#define CHARACTER_LOAD_DIFFERENCE (UNICODE_GLYPH_LOAD_END_INDEX - UNICODE_GLYPH_LOAD_START_INDEX)
+
 #include <iostream>
 #include <assert.h>
 #include <cwchar>
@@ -41,7 +47,8 @@ static uint32_t* data;
 static FT_Library library;
 static FT_Face face;
 static uint8_t* memory;
-static Character all_chars[94];
+static Character all_chars[CHARACTER_LOAD];
+static int32_t global_space_advance;
 
 template <class T> void SafeRelease(T** ppT)
 {
@@ -81,12 +88,6 @@ static void print_fontinfo(FT_Face face)
 
 static void resize(HWND hwnd)
 {
-	static int size_counter = 0;
-	size_counter++;
-	wchar_t output_buffer[256];
-	swprintf(output_buffer, sizeof(output_buffer), L"The window is about to be resized %d times.\n", size_counter);
-	OutputDebugString(output_buffer);
-
 	RECT rc;
 	GetClientRect(hwnd, &rc);
 
@@ -105,13 +106,14 @@ static void resize(HWND hwnd)
 
 	SafeRelease(&hwnd_render_target);
 	factory->CreateHwndRenderTarget(rt_properties, hwnd_rt_properties, &hwnd_render_target);
+	assert(hwnd_render_target);
 
 	D2D1_BITMAP_PROPERTIES bmp_properties = {};
 	bmp_properties.pixelFormat = D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
 	bmp_properties.dpiX = dpi;
 	bmp_properties.dpiY = dpi;
 
-	for (int i = 0; i < 94; i++)
+	for (int i = 0; i < CHARACTER_LOAD_DIFFERENCE; i++)
 	{
 		Character c = all_chars[i];
 
@@ -127,12 +129,9 @@ static void resize(HWND hwnd)
 
 		all_chars[i] = c;
 	}
-
-	swprintf(output_buffer, sizeof(output_buffer), L"The window was resized %d times.\n", size_counter);
-	OutputDebugString(output_buffer);
 }
 
-void RenderText(std::string text, float x, float y, float scale)
+void renderLine(std::string text, int32_t x, int32_t y, float scale)
 {
 	static uint32_t call_counter = 0;
 	call_counter++;
@@ -140,16 +139,28 @@ void RenderText(std::string text, float x, float y, float scale)
 	swprintf(output_buffer, sizeof(output_buffer), L"the text is about to be rendered %d times.\n", call_counter);
 	OutputDebugString(output_buffer);
 
+	ivec2 pen_position = { x, y };
+
 	std::string::const_iterator c;
 	for (c = text.begin(); c != text.end(); c++)
 	{
-		Character &ch = all_chars[*c - 33];
+		if (*c == ' ')
+		{
+			pen_position = { pen_position.x + global_space_advance, pen_position.y };
+		}
+		else
+		{
+			Character& ch = all_chars[*c - UNICODE_GLYPH_LOAD_START_INDEX];
+			int32_t top = pen_position.x + ch.bearing.x;
+			int32_t left = pen_position.y - ch.bearing.y;
 
-		hwnd_render_target->DrawBitmap(ch.d2bitmap, D2D1::RectF(0.0f, 0.0f, ch.size.x, ch.size.y),
-										1.0f,
-										D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
-										D2D1::RectF(0.0f, 0.0f, ch.size.x, ch.size.y));
+			hwnd_render_target->DrawBitmap(ch.d2bitmap, D2D1::RectF(top, left, top + ch.size.x, left + ch.size.y),
+				1.0f,
+				D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
+				D2D1::RectF(0.0f, 0.0f, ch.size.x, ch.size.y));
 
+			pen_position = { pen_position.x + static_cast<int32_t>(ch.advance), pen_position.y };
+		}
 	}
 
 	swprintf(output_buffer, sizeof(output_buffer), L"the text was rendered %d times.\n", call_counter);
@@ -170,10 +181,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		HDC hdc = BeginPaint(hwnd, &ps);
 
 		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
+		D2D1_COLOR_F clear_color = D2D1::ColorF(0.1f, 0.1f, 0.1f, 1.0f);
 		hwnd_render_target->BeginDraw();
-		hwnd_render_target->Clear();
+		hwnd_render_target->Clear(clear_color);
 
-		RenderText("H", 0.0f, 0.0f, 1.0f);
+		renderLine("all ascii-signs: !\"#$ % &'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 10, 22, 1.0f);
+		renderLine("my texteditor is working! :)", 10, 40, 1.0f);
 
 		hwnd_render_target->EndDraw();
 
@@ -191,6 +204,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void stretchAlphaDataToBGRAData(uint8_t* data, size_t size)
 {
+	assert(data);
+	assert(size);
 	uint8_t pixels[10000];
 	memcpy(pixels, data, size);
 	for (int i = 0; i < size; i++)
@@ -204,9 +219,9 @@ void stretchAlphaDataToBGRAData(uint8_t* data, size_t size)
 		}
 		else
 		{
-			data[(i * 4)] = 0x00;
-			data[(i * 4) + 1] = 0x00;
-			data[(i * 4) + 2] = 0x00;
+			data[(i * 4)] = 0xFF / 10;
+			data[(i * 4) + 1] = 0xFF / 10;
+			data[(i * 4) + 2] = 0xFF / 10;
 		}
 		data[(i * 4) + 3] = 0xFF;
 	}
@@ -228,21 +243,32 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	factory_options.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
 
 	D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory), &factory_options, (void**)(&factory));
+	assert(factory);
 
 	HWND hwnd = CreateWindowEx(0, CLASS_NAME, L"Minimalist", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 								NULL, NULL, hInstance, NULL);
+	assert(hwnd);
 
 	uint32_t dpi = GetDpiForWindow(hwnd);
+	assert(dpi);
 	memory = (uint8_t*)malloc(1024 * 1024 * 1024);
-	// memset(memory, 0xFF, 1024 * 1024 * 1024);
+	assert(memory);
 
 	FT_Init_FreeType(&library);
 	// set 3rd param to -1 to retrieve number of faces in the font by accessing face->num_faces.
+	assert(library);
 	FT_New_Face(library, "Resources/LiberationMono-Regular.ttf", 0, &face);
-	FT_Set_Char_Size(face, 0, 12 * 64, dpi, dpi);
+	assert(face);
+	FT_Set_Char_Size(face, 0, POINT_SIZE * 64, dpi, dpi);
 
+	uint32_t glyph_index = FT_Get_Char_Index(face, 32);
+	assert(glyph_index);
+	FT_Load_Glyph(face, glyph_index, FT_LOAD_COLOR);
+	assert(face->glyph->format != FT_GLYPH_FORMAT_BITMAP);
+	global_space_advance = face->glyph->advance.x / 64;
+	
 
-	for (int i = 33; i < 127; i++)
+	for (int i = UNICODE_GLYPH_LOAD_START_INDEX; i < UNICODE_GLYPH_LOAD_END_INDEX; i++)
 	{
 		// load glyph's bitmap
 		uint32_t glyph_index = FT_Get_Char_Index(face, i);
@@ -253,23 +279,24 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 		assert(face->glyph->bitmap.buffer);
 
 		// place bitmap in heap memory
-		memcpy(memory + (1024 * 1024 * (i-33)),
+		memcpy(memory + (1024 * 1024 * (i - UNICODE_GLYPH_LOAD_START_INDEX)),
 			face->glyph->bitmap.buffer,
 			face->glyph->bitmap.pitch * face->glyph->bitmap.rows);
 
-		stretchAlphaDataToBGRAData(memory + (1024 * 1024 * (i - 33)), face->glyph->bitmap.pitch * face->glyph->bitmap.rows);
+		stretchAlphaDataToBGRAData(memory + (1024 * 1024 * (i - UNICODE_GLYPH_LOAD_START_INDEX)),
+			face->glyph->bitmap.pitch* face->glyph->bitmap.rows);
+
 
 		// save relevant info and pointer to bitmap
 		Character c = {};
 		c.character = i;
 		c.size = { face->glyph->bitmap.width, face->glyph->bitmap.rows };
 		c.bearing = { face->glyph->bitmap_left, face->glyph->bitmap_top };
-		c.advance = face->glyph->advance.x;
+		c.advance = face->glyph->advance.x / 64;
 		c.pitch = face->glyph->bitmap.pitch;
 
-		all_chars[i - 33] = c;
+		all_chars[i - UNICODE_GLYPH_LOAD_START_INDEX] = c;
 	}
-	OutputDebugString(L"\nMEMORY INITIALIZED\n");
 
 	ShowWindow(hwnd, nCmdShow);
 
@@ -284,7 +311,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	{
 		SafeRelease(&(all_chars[i].d2bitmap));
 	}
-	OutputDebugString(L"\nMEMORY RELEASED\n");
 
 	SafeRelease(&hwnd_render_target);
 	SafeRelease(&factory);
